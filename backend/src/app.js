@@ -1,6 +1,9 @@
 import Fastify from 'fastify';
 import { createErrorHandler, notFoundHandler } from './utils/errors.js';
 import healthRoutes from './modules/health/health.routes.js';
+import { registerJwt } from './plugins/jwt.js';
+import authRoutes from './modules/auth/auth.routes.js';
+import attendanceRoutes from './modules/attendance/attendance.routes.js';
 
 /**
  * Builds the Fastify instance. Config and db are injected (not imported) so tests
@@ -22,6 +25,17 @@ export function buildApp({ config, db }) {
   app.setNotFoundHandler(notFoundHandler);
 
   app.register(healthRoutes);
+
+  // Auth-dependent modules need a JWT secret. env.js always supplies one (and rejects weak
+  // ones in production); only a hand-built config without a secret (e.g. Phase 1 schema tests)
+  // skips them. Fails closed: the protected routes simply do not exist without a secret.
+  if (config.jwtSecret) {
+    registerJwt(app, config);
+    app.register(authRoutes);
+    app.register(attendanceRoutes);
+  } else {
+    app.log.warn('jwtSecret not configured: auth and protected routes are disabled');
+  }
 
   return app;
 }

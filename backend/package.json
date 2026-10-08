@@ -4,7 +4,9 @@
   "private": true,
   "description": "Student Management System backend (Fastify + SQLite)",
   "type": "module",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
@@ -13,6 +15,8 @@
     "db:seed": "node src/database/seed-cli.js"
   },
   "dependencies": {
+    "@fastify/jwt": "^9.1.0",
+    "bcrypt": "^6.0.0",
     "better-sqlite3": "^12.0.0",
     "dotenv": "^16.4.5",
     "fastify": "^5.0.0"
