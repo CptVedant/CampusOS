@@ -4,6 +4,8 @@ import healthRoutes from './modules/health/health.routes.js';
 import { registerJwt } from './plugins/jwt.js';
 import authRoutes from './modules/auth/auth.routes.js';
 import attendanceRoutes from './modules/attendance/attendance.routes.js';
+import courseRoutes from './modules/courses/courses.routes.js';
+import enrollmentRoutes from './modules/enrollments/enrollments.routes.js';
 
 /**
  * Builds the Fastify instance. Config and db are injected (not imported) so tests
@@ -33,6 +35,8 @@ export function buildApp({ config, db }) {
     registerJwt(app, config);
     app.register(authRoutes);
     app.register(attendanceRoutes);
+    app.register(courseRoutes);
+    app.register(enrollmentRoutes);
   } else {
     app.log.warn('jwtSecret not configured: auth and protected routes are disabled');
   }
