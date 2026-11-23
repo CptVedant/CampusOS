@@ -45,3 +45,66 @@ Response envelope: `{ "success": true, "data": ... }` or `{ "success": false, "e
 
 ## Roadmap / later sections
 Authentication, endpoint table, upload configuration, Termux + PM2 + Cloudflare Tunnel notes are added in their phases.
+
+## Authentication (Phase 2)
+`POST /api/auth/login` with `{ "email", "password" }` returns `{ success, data: { token, user } }`.
+Send the token on protected routes as `Authorization: Bearer <token>`.
+
+- Passwords: bcrypt, cost 10. Hashes are never returned by any endpoint.
+- JWT (HS256): payload is `sub` (user id), `role`, `iat`, `exp`. Secret from `JWT_SECRET`, lifetime from `JWT_EXPIRES_IN`.
+- Failures: bad/missing/expired token or bad credentials -> 401; authenticated but wrong role -> 403.
+- Guards are Fastify `onRequest` hooks: `onRequest: [authenticate, authorize('teacher', 'admin')]`.
+  Roles are explicit and never implied.
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| POST | /api/auth/login | none | exchange credentials for a JWT |
+
+## Courses & enrollments (Phase 3)
+Access model (the SRS leaves exact filtering open; this is the smallest reasonable reading):
+
+| Role | Courses they can see | Courses they can manage |
+|---|---|---|
+| admin | all | all |
+| teacher | courses where `teacher_id` is them | the same |
+| student | courses they are enrolled in | none |
+
+Course not found -> 404; exists but not permitted -> 403; malformed id -> 400.
+
+| Method | Path | Roles | Notes |
+|---|---|---|---|
+| GET | /api/courses | any | filtered by role as above |
+| POST | /api/courses | teacher, admin | body `course_code`, `title`, `teacher_id` (required for admin; a teacher can only use their own id) |
+| GET | /api/courses/:courseId | any (if permitted) | |
+| PUT | /api/courses/:courseId | owner teacher, admin | body `course_code`, `title`, optional `teacher_id` (admin only) |
+| DELETE | /api/courses/:courseId | owner teacher, admin | enrollments are removed with it; refused with 409 if attendance, document or assessment records exist |
+| POST | /api/courses/:courseId/enrollments | owner teacher, admin | body `student_id`; must be an existing user with role `student`; duplicate -> 409 |
+| GET | /api/courses/:courseId/enrollments | owner teacher, admin | roster: `student_id, full_name, email, enrolled_at` |
+| DELETE | /api/courses/:courseId/enrollments/:studentId | owner teacher, admin | 404 if not enrolled |
+| GET | /api/me/courses | student | the caller's own enrollments (identity from the JWT only) |
+
+## Attendance (Phase 4)
+Staff = teacher (own courses only) or admin (all courses). Students use only the student endpoints.
+The student's identity always comes from the JWT; no endpoint accepts a student id for a punch.
+Errors use the standard envelope `{ success:false, error:{ code, message } }`.
+
+| Method | Path | Role | Body / query | Success | Errors |
+|---|---|---|---|---|---|
+| POST | /api/attendance/start | staff | `{course_id}` | 201 `{id, course_id, otp_code, is_active, started_at, ended_at}` | 400 bad id, 401, 403 not owner, 404 no course, 409 `SESSION_ALREADY_ACTIVE` |
+| POST | /api/attendance/stop | staff | `{session_id}` | 200 session (idempotent: stopping an already closed session succeeds; the OTP is omitted from the response) | 400, 401, 403, 404 |
+| POST | /api/attendance/punch | student | `{session_id, otp, device_fingerprint}` (otp = 6 digits, fingerprint = UUID) | 201 `{session_id, course_id, punched_at}` | 400 `INVALID_OTP` / `SESSION_CLOSED` / bad payload, 401, 403 `NOT_ENROLLED` or wrong role, 404 `SESSION_NOT_FOUND`, 409 `ALREADY_PUNCHED` / `DEVICE_ALREADY_USED` |
+| GET | /api/attendance/active | student | none | 200 active sessions in the student's courses (never the OTP) | 401, 403 |
+| GET | /api/attendance/me | student | optional `course_id` | 200 `{courses:[{..., total_sessions, sessions_attended, attendance_percentage}], records:[...]}` | 400, 401, 403 |
+| GET | /api/attendance/sessions | staff | `?course_id=` (required) | 200 sessions with `attendance_count` | 400, 401, 403, 404 |
+| GET | /api/attendance/sessions/:sessionId | staff | none | 200 `{session, present[], absent[]}`; `otp_code` only while active | 400, 401, 403, 404 |
+| POST | /api/attendance/sessions/:sessionId/records | staff | `{student_id}` | 201 manual present record | 400 not a student / `STUDENT_NOT_ENROLLED`, 401, 403, 404, 409 `ALREADY_PUNCHED` |
+| DELETE | /api/attendance/sessions/:sessionId/records/:studentId | staff | none | 200 | 400, 401, 403, 404 |
+
+Rules and assumptions (the SRS leaves these open):
+- Punch checks run in this order: session exists, student is enrolled, session is active, OTP matches, no earlier punch by this student, device not used by another student. Enrollment is checked first so outsiders learn nothing about a session's state or code.
+- Fingerprints are stored lower-cased so UUID case variants cannot bypass `UNIQUE(session_id, device_fingerprint)`. A client-supplied fingerprint is not proof of physical hardware identity.
+- One active session per course at a time (enforced in the service, inside the write transaction).
+- No automatic expiry: the teacher stops sessions manually.
+- Percentage = `sessions_attended / total_sessions * 100` (2 decimals). `total_sessions` counts every closed session of the course plus a still-open session only if the student already punched it; 0 sessions gives 0%. Enrollment date is not considered.
+- Manual override = staff add or delete an attendance record (the schema has no status column). Manual records use a synthetic fingerprint `manual:<uuid>` and are flagged `manual: true` in session detail. There is no audit trail of who made the change or why.
+- There is no rate limiting: a 6-digit OTP can be guessed by an enrolled student during an open session.

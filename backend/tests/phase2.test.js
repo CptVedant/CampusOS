@@ -205,9 +205,14 @@ test('AUTH-UNIT-06: teacher can reach a teacher-protected operation', async () =
   assert.equal(res.statusCode, 200);
   assert.equal(spy.teacher, before + 1);
 
-  // The real route lets a teacher through authorization; the Phase 2 placeholder answers 501.
-  assert.equal((await startAttendance(tokens.teacher)).statusCode, 501);
-  assert.equal((await startAttendance(tokens.admin)).statusCode, 501);
+  // The real route lets teachers and admins through authentication/authorization. With an empty
+  // body they reach request validation (400), which proves they were not stopped by the guards.
+  for (const role of ['teacher', 'admin']) {
+    const res = await startAttendance(tokens[role]);
+    assert.notEqual(res.statusCode, 401);
+    assert.notEqual(res.statusCode, 403);
+    assert.equal(res.statusCode, 400);
+  }
 });
 
 test('AUTH-UNIT-07: student cannot access teacher/admin-protected operations', async () => {

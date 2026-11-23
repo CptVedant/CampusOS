@@ -35,3 +35,5 @@ build/
 # Local project migration backups
 phase-2-temp/
 backend-phase1-backup/
+/Zipped/
+/phase4-backup-20261017-190540/
