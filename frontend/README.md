@@ -1,6 +1,6 @@
 # CampusOS frontend
 
-CampusOS uses React, TypeScript, Tailwind, and Vite. Use Node.js 22 or 24 with npm.
+CampusOS uses React, TypeScript, Tailwind, and Vite. Use Node.js 22.12 or later in the 22.x series, or Node.js 24, with npm.
 
 ## Run the DBMS demo with the real API
 
@@ -33,9 +33,12 @@ All four disposable accounts use `CampusOS-Local-Test-Only`.
 1. Sign in as the teacher and open **Attendance**. Select CS101 and start a session.
 2. Open the site in a second browser profile or private window for the student. Enter the teacher’s code on **Overview**.
 3. Show the student’s attendance percentage and history, then return to the teacher’s live roster. End the session.
-4. Open **Materials** and **Marks**, or **Users** as the admin, to show the labeled sample screens.
+4. Open **Materials** as a teacher or admin to upload, edit, or delete documents. Students can list and download documents from courses they are enrolled in.
+5. Open **Marks** or the admin **Users** tab to view labeled samples. These screens depend on backend features that are not yet available.
 
 Separate browser profiles keep sign-ins independent. If demonstrating both student accounts, give them separate profiles because the API allows one check-in per browser fingerprint per session.
+
+Live enrollment accepts the student UUID through the existing enrollments endpoint. Name and email search requires the Phase 6 student-search endpoint on the deployed backend. Bearer tokens are kept in tab-scoped session storage and cleared on sign-out or expiration. Serve the frontend and same-origin API over HTTPS in production.
 
 To use another backend, set `API_PROXY_TARGET` in `frontend/.env.local` and restart Vite. Production builds use same-origin `/api` URLs.
 

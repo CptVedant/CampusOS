@@ -1,6 +1,7 @@
-import { cp, mkdir } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
-import { resolve } from 'node:path';
+import { join, resolve } from 'node:path';
+import { tmpdir } from 'node:os';
 import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 
@@ -44,6 +45,7 @@ export async function createBackend() {
   const { runMigrations } = loadBackend('./src/database/migrate.js');
   const { buildApp } = loadBackend('./src/app.js');
   const { hashPassword } = loadBackend('./src/modules/auth/auth.service.js');
+  const uploadDir = await mkdtemp(join(tmpdir(), 'campusos-fixture-'));
   const db = openDatabase(':memory:');
   runMigrations(db);
   const hash = await hashPassword(password);
@@ -81,10 +83,12 @@ export async function createBackend() {
       logLevel: 'silent',
       jwtSecret: randomUUID(),
       jwtExpiresIn: '1h',
+      uploadDir,
     },
   });
   app.addHook('onClose', async () => {
     db.close();
+    await rm(uploadDir, { recursive: true, force: true });
   });
   await app.ready();
   return { app, accounts, course };

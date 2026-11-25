@@ -20,6 +20,13 @@ export interface Student {
   full_name: string;
   email: string;
 }
+export interface Material {
+  id: string;
+  title: string;
+  description: string | null;
+  original_filename: string | null;
+  file_size: number;
+}
 export interface Present extends Student {
   punched_at: string;
   manual: 0 | 1 | boolean;

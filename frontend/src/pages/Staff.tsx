@@ -114,7 +114,7 @@ function Roster({ course }: { course: Course }) {
         </button>
       </form>
       <p className="quiet">
-        Student search is pending. Enter the student’s ID to enroll them.
+        Enter the student’s UUID. Name and email search requires the student-search endpoint, which is not available on main yet.
       </p>
       <ErrorText error={change.error} />
       <Result query={roster}>

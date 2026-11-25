@@ -1,9 +1,10 @@
-import { http } from './api';
+import { http, requestResponse, responseData } from './api';
 import type {
   ActiveSession,
   Attendance,
   Auth,
   Course,
+  Material,
   Session,
   SessionDetail,
   Student,
@@ -59,6 +60,26 @@ export const api = {
     request('/attendance/sessions/' + id + '/records', 'POST', { student_id }),
   unmark: (id: string, student: string) =>
     request('/attendance/sessions/' + id + '/records/' + student, 'DELETE'),
+};
+
+export const materialsApi = {
+  async list(courseId: string, page: number) {
+    const query = new URLSearchParams({ courseId, page: String(page) });
+    const response = await requestResponse('/documents?' + query);
+    return {
+      items: await responseData<Material[]>(response),
+      hasNext: response.headers.has('X-Next-Page'),
+    };
+  },
+  upload: (form: FormData) => http<Material>('/documents', 'POST', form),
+  update: (id: string, fields: Pick<Material, 'title' | 'description'>) =>
+    http<Material>('/documents/' + id, 'PATCH', fields),
+  async remove(id: string) {
+    await requestResponse('/documents/' + id, 'DELETE');
+  },
+  async download(id: string) {
+    return (await requestResponse('/documents/' + id + '/download')).blob();
+  },
 };
 export const demoAccounts = {
   student: 'student@campus.test',

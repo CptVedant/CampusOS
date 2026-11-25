@@ -2,14 +2,18 @@ import type { Auth } from './types';
 const AUTH_KEY = 'campusos.auth';
 export function readAuth(): Auth | null {
   try {
-    return JSON.parse(localStorage.getItem(AUTH_KEY) ?? 'null') as Auth | null;
+    localStorage.removeItem(AUTH_KEY); // Clear tokens persisted by older builds.
+    const auth = JSON.parse(sessionStorage.getItem(AUTH_KEY) ?? 'null') as Auth | null;
+    return auth && typeof auth.token === 'string' &&
+      typeof auth.user?.full_name === 'string' &&
+      ['student', 'teacher', 'admin'].includes(auth.user.role) ? auth : null;
   } catch {
     return null;
   }
 }
 export function saveAuth(auth: Auth | null) {
-  if (auth) localStorage.setItem(AUTH_KEY, JSON.stringify(auth));
-  else localStorage.removeItem(AUTH_KEY);
+  if (auth) sessionStorage.setItem(AUTH_KEY, JSON.stringify(auth));
+  else sessionStorage.removeItem(AUTH_KEY);
 }
 export function fingerprint() {
   const key = 'campusos.device';

@@ -23,34 +23,36 @@ export class ApiError extends Error {
   }
 }
 
-export async function http<T>(
+export async function requestResponse(
   path: string,
   method = 'GET',
   body?: object,
-): Promise<T> {
+): Promise<Response> {
   const auth = readAuth();
   const headers = new Headers({ Accept: 'application/json' });
   if (auth && path !== '/auth/login')
     headers.set('Authorization', 'Bearer ' + auth.token);
-  if (body) headers.set('Content-Type', 'application/json');
+  const multipart = body instanceof FormData;
+  if (body && !multipart) headers.set('Content-Type', 'application/json');
   let response: Response;
   try {
     response = await fetch('/api' + path, {
       method,
       headers,
-      body: body ? JSON.stringify(body) : undefined,
+      body: multipart ? body : body ? JSON.stringify(body) : undefined,
     });
   } catch {
     throw new Error(
       'Could not reach the server. Check your connection and try again.',
     );
   }
+  if (response.status === 401 && path !== '/auth/login' &&
+      auth && readAuth()?.token === auth.token)
+    window.dispatchEvent(new Event('campusos:expired'));
+  if (response.ok) return response;
   const result = (await response
     .json()
-    .catch(() => null)) as Envelope<T> | null;
-  if (response.status === 401 && path !== '/auth/login')
-    window.dispatchEvent(new Event('campusos:expired'));
-  if (response.ok && result?.success) return result.data;
+    .catch(() => null)) as Envelope<unknown> | null;
   const fallback =
     response.status === 403
       ? 'You do not have access to this action.'
@@ -65,4 +67,14 @@ export async function http<T>(
     error?.code ?? '',
     response.status >= 500 ? fallback : (error?.message ?? fallback),
   );
+}
+
+export async function responseData<T>(response: Response): Promise<T> {
+  const result = await response.json().catch(() => null) as Envelope<T> | null;
+  if (result?.success) return result.data;
+  throw new ApiError(response.status, '', 'The API returned an unexpected response.');
+}
+
+export async function http<T>(path: string, method = 'GET', body?: object): Promise<T> {
+  return responseData<T>(await requestResponse(path, method, body));
 }
