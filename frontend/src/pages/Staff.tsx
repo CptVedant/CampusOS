@@ -2,10 +2,14 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Activity, BookOpen, Plus } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { api } from '../services';
+import { api, useMocks } from '../services';
 import { dateTime } from '../attendance';
 import type { Course, SessionDetail, User } from '../types';
 import { Empty, ErrorText, PageTitle, Result } from '../ui';
+import {
+  MIN_STUDENT_SEARCH_LENGTH,
+  useStudentSearch,
+} from '../useStudentSearch';
 
 function CourseEditor({
   course,
@@ -80,42 +84,163 @@ function CourseEditor({
 function Roster({ course }: { course: Course }) {
   const client = useQueryClient();
   const [student, setStudent] = useState('');
+  const [term, setTerm] = useState('');
+  const [selectedId, setSelectedId] = useState('');
+  const search = useStudentSearch(course.id, term);
+  const matches =
+    search.eligible && !search.isDebouncing ? (search.query.data ?? []) : [];
+  const selected = matches.find(
+    (student) => student.student_id === selectedId && !student.already_enrolled,
+  );
   const queryKey = ['staff', 'roster', course.id];
   const roster = useQuery({ queryKey, queryFn: () => api.roster(course.id) });
   const change = useMutation({
     mutationFn: ({ id, remove }: { id: string; remove: boolean }) =>
       remove ? api.unenroll(course.id, id) : api.enroll(course.id, id),
     onSuccess: async (_, action) => {
-      if (!action.remove) setStudent('');
+      if (!action.remove) {
+        setStudent('');
+        setSelectedId('');
+      }
       await client.invalidateQueries({ queryKey: ['staff'] });
     },
   });
+  const manualEnroll = (
+    <form
+      className="enroll"
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (student.trim() && !change.isPending)
+          change.mutate({ id: student.trim(), remove: false });
+      }}
+    >
+      <label>
+        Student ID
+        <input
+          value={student}
+          onChange={(event) => setStudent(event.target.value)}
+          placeholder="Student UUID"
+          required
+        />
+      </label>
+      <button
+        className={useMocks ? 'primary' : undefined}
+        disabled={change.isPending}
+      >
+        {useMocks ? 'Enroll student' : 'Enroll by ID'}
+      </button>
+    </form>
+  );
   return (
     <section className="card">
       <h2>Course roster</h2>
-      <form
-        className="enroll"
-        onSubmit={(e) => {
-          e.preventDefault();
-          change.mutate({ id: student.trim(), remove: false });
-        }}
-      >
-        <label>
-          Student ID
-          <input
-            value={student}
-            onChange={(e) => setStudent(e.target.value)}
-            placeholder="Student UUID"
-            required
-          />
-        </label>
-        <button className="primary" disabled={change.isPending}>
-          Enroll student
-        </button>
-      </form>
-      <p className="quiet">
-        Enter the student’s UUID. Name and email search requires the student-search endpoint, which is not available on main yet.
-      </p>
+      {!useMocks && (
+        <form
+          className="form-stack"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (selected && !change.isPending)
+              change.mutate({ id: selected.student_id, remove: false });
+          }}
+        >
+          <label>
+            Find a student
+            <input
+              type="search"
+              value={term}
+              maxLength={254}
+              autoComplete="off"
+              placeholder="Name or email"
+              onChange={(event) => {
+                setTerm(event.target.value);
+                setSelectedId('');
+                change.reset();
+              }}
+              disabled={change.isPending}
+            />
+          </label>
+          {!search.eligible && (
+            <p className="quiet">
+              Enter at least {MIN_STUDENT_SEARCH_LENGTH} characters.
+            </p>
+          )}
+          {search.eligible &&
+            (search.isDebouncing || search.query.isFetching) && (
+              <p className="quiet" role="status">
+                Searching for students…
+              </p>
+            )}
+          {search.eligible && !search.isDebouncing && search.query.isError && (
+            <div>
+              <ErrorText error={search.query.error} />
+              <button
+                type="button"
+                disabled={search.query.isFetching}
+                onClick={() => void search.query.refetch()}
+              >
+                Retry search
+              </button>
+            </div>
+          )}
+          {search.eligible &&
+            !search.isDebouncing &&
+            search.query.isSuccess &&
+            !search.query.data.length && (
+              <p className="quiet" role="status">
+                No matching students.
+              </p>
+            )}
+          {matches.length > 0 && (
+            <fieldset
+              className="student-search-results"
+              disabled={change.isPending}
+            >
+              <legend>Search results</legend>
+              <ul className="rows">
+                {matches.map((match) => (
+                  <li key={match.student_id}>
+                    <label>
+                      <input
+                        type="radio"
+                        name="student-search-result"
+                        checked={selectedId === match.student_id}
+                        disabled={match.already_enrolled}
+                        onChange={() => {
+                          setSelectedId(match.student_id);
+                          change.reset();
+                        }}
+                      />
+                      <span>
+                        <strong>{match.full_name}</strong>
+                        <small>{match.email}</small>
+                        {match.already_enrolled && (
+                          <small>Already enrolled</small>
+                        )}
+                      </span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            </fieldset>
+          )}
+          <div>
+            <button
+              className="primary"
+              disabled={!selected || change.isPending}
+            >
+              Enroll student
+            </button>
+          </div>
+        </form>
+      )}
+      {useMocks ? (
+        manualEnroll
+      ) : (
+        <details className="manual-enrollment">
+          <summary>Enroll by student ID</summary>
+          {manualEnroll}
+        </details>
+      )}
       <ErrorText error={change.error} />
       <Result query={roster}>
         {(items) =>

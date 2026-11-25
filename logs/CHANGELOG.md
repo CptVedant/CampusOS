@@ -1,5 +1,10 @@
 # CampusOS frontend changelog
 
+## 2026-11-25 — Student search frontend, milestone 2
+
+- Added the teacher and admin roster picker with debounced name and email search, already-enrolled indicators, loading, empty, and error states, and manual UUID enrollment. Switching courses clears the selected student. A successful enrollment refreshes the roster and search results.
+- TypeScript, targeted lint, the Vite build, and all 14 frontend tests passed. The new rendered integration test uses real Fastify and SQLite to verify course switching, enrollment, and duplicate selection prevention. A live browser walkthrough is pending.
+
 ## 2026-11-25 — Student search frontend, milestone 1
 
 - Added the authenticated course-scoped search client and debounced React Query hook. Searches wait 300 ms after the latest eligible term and are disabled in mock mode. The roster picker remains a follow-up.

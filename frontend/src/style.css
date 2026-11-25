@@ -590,3 +590,10 @@ tr:last-child td {
     background: var(--surface);
   }
 }
+
+.student-search-results { margin: 0; padding: 0; border: 0; min-width: 0; }
+.student-search-results legend { font-weight: 650; }
+.student-search-results li label { display: flex; align-items: center; gap: .6rem; overflow-wrap: anywhere; }
+.student-search-results input[type='radio'] { width: 1rem; min-height: 0; padding: 0; flex: 0 0 1rem; accent-color: var(--accent); }
+.manual-enrollment { margin: .85rem 0; }
+.manual-enrollment summary { cursor: pointer; }
