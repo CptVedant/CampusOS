@@ -432,6 +432,14 @@ it('saves a mark in the teacher screen and shows only the signed-in student’s 
   let close = await openMarks(accounts.teacher.email);
   try {
     await screen.findByText('No assessments yet.');
+    const titleInput = screen.getByLabelText<HTMLInputElement>('Assessment title');
+    const maximumInput = screen.getByLabelText<HTMLInputElement>('Maximum score');
+    fireEvent.change(titleInput, { target: { value: '   ' } });
+    expect(titleInput.checkValidity()).toBe(false);
+    fireEvent.change(maximumInput, { target: { value: '0' } });
+    expect(maximumInput.checkValidity()).toBe(false);
+    fireEvent.change(maximumInput, { target: { value: '0.5' } });
+    expect(maximumInput.checkValidity()).toBe(true);
     fireEvent.change(screen.getByLabelText('Assessment title'), { target: { value: 'Database quiz' } });
     fireEvent.change(screen.getByLabelText('Maximum score'), { target: { value: '20' } });
     fireEvent.click(screen.getByRole('button', { name: 'Create assessment' }));

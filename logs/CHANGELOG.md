@@ -67,3 +67,8 @@
 
 - Verified in the React integration suite that a teacher can create an assessment, save zero, reopen the screen and see the saved score, and that only the graded student sees it. Backend coverage also rejects writes by another teacher.
 - Node.js 24 verification: 152 backend tests passed (1 POSIX-only skip on Windows), 16 frontend tests passed, and the production build succeeded.
+
+## Assessment form debugging
+
+- Corrected browser validation for whitespace-only titles and zero assessment maxima. Regression coverage includes positive fractional maxima and saving a student score of zero.
+- Verified 16 frontend tests, lint, production build, and 152 backend tests with one platform-specific skip.

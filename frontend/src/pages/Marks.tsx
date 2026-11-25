@@ -101,8 +101,16 @@ function CourseMarks({ course, teacher }: { course: string; teacher: boolean }) 
           create.mutate({ title, max_marks: Number(maximum) }, { onSuccess: () => form.reset() });
         }}>
           <h2>Create assessment</h2>
-          <label>Assessment title<input name="title" required maxLength={200} /></label>
-          <label>Maximum score<input name="maximum" type="number" step="any" min={0} required /></label>
+          <label>Assessment title<input name="title" required maxLength={200} pattern=".*\S.*" title="Enter an assessment title with at least one non-space character." /></label>
+          <label>
+            Maximum score
+            <input
+              name="maximum" type="number" step="any" min={0} required
+              onChange={({ currentTarget }) => currentTarget.setCustomValidity(
+                currentTarget.valueAsNumber <= 0 ? 'Enter a maximum score greater than zero.' : '',
+              )}
+            />
+          </label>
           <ErrorText error={create.error} />
           <div><button className="primary" disabled={create.isPending}>Create assessment</button></div>
         </form>
