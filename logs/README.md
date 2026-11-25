@@ -4,6 +4,9 @@ This directory contains phase-wise implementation, testing, and verification log
 
 ## Logs
 
+- [Frontend changelog](./CHANGELOG.md)
+- [Backend and deployment follow-ups](./OPEN_QUESTIONS.md)
+
 - [Phase 5 — Document Management](./PHASE5_IMPLEMENTATION_LOG.md)
 
 ## Naming convention

@@ -75,6 +75,7 @@ Send the token on protected routes as `Authorization: Bearer <token>`.
 
 - Passwords: bcrypt, cost 10. Hashes are never returned by any endpoint.
 - JWT (HS256): payload is `sub` (user id), `role`, `iat`, `exp`. Secret from `JWT_SECRET`, lifetime from `JWT_EXPIRES_IN`.
+- The backend pins `@fastify/jwt` 10.2.9 for the patched `fast-jwt` 6.x verifier. The latest 9.x plugin release stays on the affected 5.x verifier. The v10 plugin supports Fastify 5. The verifier's stricter claim handling accepts the scalar claims CampusOS issues and the configured HS256 algorithm.
 - Failures: bad/missing/expired token or bad credentials -> 401; authenticated but wrong role -> 403.
 - Guards are Fastify `onRequest` hooks: `onRequest: [authenticate, authorize('teacher', 'admin')]`.
   Roles are explicit and never implied.
