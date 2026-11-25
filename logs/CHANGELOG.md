@@ -1,5 +1,10 @@
 # CampusOS frontend changelog
 
+## 2026-11-25 — Student search browser walkthrough
+
+- Verified the teacher roster against the disposable local API. Created ZZ201, found a test student by name and email, verified that changing rosters cleared the selection, and enrolled the student. The roster refreshed and the search result became disabled with an Already enrolled label. Also checked the empty search state and the manual UUID form.
+- Closed the browser test tab. Stopped both local test listeners. No application source files changed.
+
 ## 2026-11-25 — Student search frontend, milestone 2
 
 - Added the teacher and admin roster picker with debounced name and email search, already-enrolled indicators, loading, empty, and error states, and manual UUID enrollment. Switching courses clears the selected student. A successful enrollment refreshes the roster and search results.
