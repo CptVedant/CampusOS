@@ -408,3 +408,60 @@ it('provisions an empty campus and records a new student check-in through the UI
     client.clear();
   }
 }, 20000);
+
+it('saves a mark in the teacher screen and shows only the signed-in student’s result', async () => {
+  const { password } = await import(/* @vite-ignore */ fixturePath);
+  const { accounts } = fixture;
+  vi.stubGlobal('matchMedia', () => ({ matches: false }));
+  vi.stubGlobal('scrollTo', () => undefined);
+
+  async function openMarks(email: string) {
+    saveAuth(await api.login(email, password));
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const view = render(
+      <QueryClientProvider client={client}>
+        <MemoryRouter initialEntries={['/marks']}><App /></MemoryRouter>
+      </QueryClientProvider>,
+    );
+    return () => {
+      view.unmount();
+      client.clear();
+    };
+  }
+
+  let close = await openMarks(accounts.teacher.email);
+  try {
+    await screen.findByText('No assessments yet.');
+    fireEvent.change(screen.getByLabelText('Assessment title'), { target: { value: 'Database quiz' } });
+    fireEvent.change(screen.getByLabelText('Maximum score'), { target: { value: '20' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Create assessment' }));
+
+    const score = await screen.findByRole('spinbutton', { name: 'Score for Test Student' });
+    const row = score.closest('li');
+    if (!row) throw new Error('Missing student score row');
+    fireEvent.change(score, { target: { value: '0' } });
+    fireEvent.click(within(row).getByRole('button', { name: 'Save score' }));
+    await within(row).findByText('0 / 20');
+    await within(row).findByText('Score saved.');
+
+    close();
+    close = await openMarks(accounts.teacher.email);
+    const saved = await screen.findByRole<HTMLInputElement>('spinbutton', { name: 'Score for Test Student' });
+    expect(saved.value).toBe('0');
+
+    close();
+    close = await openMarks(accounts.student.email);
+    await screen.findByRole('heading', { name: 'Your results' });
+    await screen.findByText('Database quiz');
+    await screen.findByText('0 / 20');
+    expect(screen.queryByText('second@integration.test')).toBeNull();
+
+    close();
+    close = await openMarks(accounts.second.email);
+    await screen.findByText('Database quiz');
+    await screen.findByText('Ungraded');
+    expect(screen.queryByText('0 / 20')).toBeNull();
+  } finally {
+    close();
+  }
+}, 20000);

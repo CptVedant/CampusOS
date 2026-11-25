@@ -29,6 +29,7 @@ const Staff = lazy(() => import('./pages/Staff'));
 const Demo = lazy(() => import('./pages/Demo'));
 const Materials = lazy(() => import('./pages/Materials'));
 const UserManagement = lazy(() => import('./pages/Users'));
+const Marks = lazy(() => import('./pages/Marks'));
 
 const nav = {
   home: ['/', 'Overview', House],
@@ -184,8 +185,10 @@ export default function App() {
               element={
                 user.role === 'admin' ? (
                   deny
-                ) : (
+                ) : useMocks ? (
                   <Demo key="marks" type="marks" role={user.role} />
+                ) : (
+                  <Marks teacher={user.role === 'teacher'} />
                 )
               }
             />

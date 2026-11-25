@@ -34,7 +34,7 @@ All four disposable accounts use `CampusOS-Local-Test-Only`.
 2. Open the site in a second browser profile or private window for the student. Enter the teacher’s code on **Overview**.
 3. Show the student’s attendance percentage and history, then return to the teacher’s live roster. End the session.
 4. Open **Materials** as a teacher or admin to upload, edit, or delete documents. Students can list and download documents from courses they are enrolled in.
-5. Open **Marks** to view sample data. In the admin workspace, **Users** lists real accounts and can create teachers and students.
+5. Open **Marks** as the teacher to create an assessment and record individual scores. Sign in as a student to see only that student's results. In the admin workspace, **Users** lists real accounts and can create teachers and students.
 
 Separate browser profiles keep sign-ins independent. If demonstrating both student accounts, give them separate profiles because the API allows one check-in per browser fingerprint per session.
 

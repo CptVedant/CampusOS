@@ -52,3 +52,18 @@
 
 - Verified the workflow in the React UI against an empty SQLite database: bootstrap and sign in as admin, create both accounts, assign the teacher, enroll the student, record a check-in, and view the updated teacher roster.
 - Node.js 24 verification: 151 backend tests passed (1 POSIX-only test skipped on Windows), 15 frontend tests passed, and the production build succeeded.
+
+## Live Marks — milestone 1
+
+- Added course-scoped assessments and mark entry using the existing SQLite tables. Teachers can write marks for enrolled students in their own courses. Students can read only their own results.
+- Verified access checks, score validation, repeat saves, and zero versus ungraded behavior in the backend Marks test on Node.js 24.
+
+## Live Marks — milestone 2
+
+- Connected the live Marks route to course and assessment selection, teacher score entry, and a read-only student results view. Mock mode retains its sample Marks screen.
+- Verified frontend types on Node.js 24.
+
+## Live Marks — milestone 3
+
+- Verified in the React integration suite that a teacher can create an assessment, save zero, reopen the screen and see the saved score, and that only the graded student sees it. Backend coverage also rejects writes by another teacher.
+- Node.js 24 verification: 152 backend tests passed (1 POSIX-only skip on Windows), 16 frontend tests passed, and the production build succeeded.

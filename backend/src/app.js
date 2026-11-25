@@ -4,6 +4,7 @@ import healthRoutes from './modules/health/health.routes.js';
 import { registerJwt } from './plugins/jwt.js';
 import authRoutes from './modules/auth/auth.routes.js';
 import usersRoutes from './modules/users/users.routes.js';
+import marksRoutes from './modules/marks/marks.routes.js';
 import attendanceRoutes from './modules/attendance/attendance.routes.js';
 import courseRoutes from './modules/courses/courses.routes.js';
 import enrollmentRoutes from './modules/enrollments/enrollments.routes.js';
@@ -37,6 +38,7 @@ export function buildApp({ config, db }) {
     registerJwt(app, config);
     app.register(authRoutes);
     app.register(usersRoutes);
+    app.register(marksRoutes);
     app.register(attendanceRoutes);
     app.register(courseRoutes);
     app.register(enrollmentRoutes);
