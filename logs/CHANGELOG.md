@@ -1,5 +1,30 @@
 # CampusOS frontend changelog
 
+## 2026-11-25 — Student search browser walkthrough
+
+- Verified the teacher roster against the disposable local API. Created ZZ201, found a test student by name and email, verified that changing rosters cleared the selection, and enrolled the student. The roster refreshed and the search result became disabled with an Already enrolled label. Also checked the empty search state and the manual UUID form.
+- Closed the browser test tab. Stopped both local test listeners. No application source files changed.
+
+## 2026-11-25 — Student search frontend, milestone 2
+
+- Added the teacher and admin roster picker with debounced name and email search, already-enrolled indicators, loading, empty, and error states, and manual UUID enrollment. Switching courses clears the selected student. A successful enrollment refreshes the roster and search results.
+- TypeScript, targeted lint, the Vite build, and all 14 frontend tests passed. The new rendered integration test uses real Fastify and SQLite to verify course switching, enrollment, and duplicate selection prevention. A live browser walkthrough is pending.
+
+## 2026-11-25 — Student search frontend, milestone 1
+
+- Added the authenticated course-scoped search client and debounced React Query hook. Searches wait 300 ms after the latest eligible term and are disabled in mock mode. The roster picker remains a follow-up.
+- TypeScript, targeted lint, the Vite build, and all nine frontend unit tests passed. Two new cases cover the request contract, the three-character threshold, debounce, and course-scoped query keys.
+
+## 2026-11-25 — Student search backend, milestone 2
+
+- Added four Fastify and SQLite integration tests covering partial name and email lookup, the roster update after enrollment, per-course enrollment status, role and ownership restrictions, query validation, literal matching, and the 20-result cap. All four passed.
+- Full backend suite on Node 24: 149 passed, 1 skipped, 0 failed. The initial sandbox run lacked a usable temporary directory. The rerun used a dedicated temporary directory for the fixtures.
+
+## 2026-11-25 — Student search backend, milestone 1
+
+- Added the course-scoped student search endpoint and documented the API contract in the backend README. It uses the existing management permissions and reports enrollment status for each result.
+- Module syntax, Git whitespace checks, and an in-memory SQLite service smoke check passed. The HTTP integration suite and roster picker remain follow-ups.
+
 ## 2026-11-24 — Frontend demo
 
 - M0–M2 delivered the React scaffold, typed API and mock adapters, role navigation, login, and light and dark styles. Login tokens use localStorage as agreed. Lite mode is deferred.

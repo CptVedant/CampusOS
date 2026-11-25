@@ -20,6 +20,9 @@ export interface Student {
   full_name: string;
   email: string;
 }
+export interface StudentSearchResult extends Student {
+  already_enrolled: boolean;
+}
 export interface Material {
   id: string;
   title: string;

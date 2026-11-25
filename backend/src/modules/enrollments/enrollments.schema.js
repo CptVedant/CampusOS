@@ -27,3 +27,13 @@ export const removeEnrollmentSchema = {
     properties: { courseId: uuid, studentId: uuid },
   },
 };
+
+export const searchStudentsSchema = {
+  params: courseParams,
+  querystring: {
+    type: 'object',
+    required: ['q'],
+    additionalProperties: false,
+    properties: { q: { type: 'string', maxLength: 254 } },
+  },
+};

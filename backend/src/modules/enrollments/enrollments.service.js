@@ -54,3 +54,24 @@ export function removeEnrollment(db, user, courseId, studentId) {
   if (result.changes === 0) throw new NotFoundError('Enrollment not found');
   return { course_id: courseId, student_id: studentId };
 }
+
+export function searchStudents(db, user, courseId, query) {
+  assertCanManageCourse(user, getCourseOrThrow(db, courseId));
+  const term = query.trim();
+  if ([...term].length < 3) throw new ValidationError('Enter at least 3 characters to search for students');
+
+  return db
+    .prepare(
+      `SELECT u.id AS student_id, u.full_name, u.email,
+              EXISTS (
+                SELECT 1 FROM enrollments e WHERE e.course_id = ? AND e.student_id = u.id
+              ) AS already_enrolled
+         FROM users u
+        WHERE u.role = 'student'
+          AND (instr(lower(u.full_name), lower(?)) > 0 OR instr(lower(u.email), lower(?)) > 0)
+        ORDER BY u.full_name COLLATE NOCASE, u.id
+        LIMIT 20`,
+    )
+    .all(courseId, term, term)
+    .map((row) => ({ ...row, already_enrolled: Boolean(row.already_enrolled) }));
+}

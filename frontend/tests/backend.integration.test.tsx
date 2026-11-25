@@ -269,3 +269,50 @@ it('uploads, edits, downloads and deletes live materials with backend role check
   await materialsApi.remove(uploaded.id);
   expect((await materialsApi.list(course, 1)).items).toEqual([]);
 });
+
+it('finds a student in the roster, clears selection on course switch, and enrolls the selected result', async () => {
+  const { password } = await import(/* @vite-ignore */ fixturePath);
+  saveAuth(await api.login(fixture.accounts.teacher.email, password));
+  const course = await api.saveCourse({ course_code: 'ZZ101', title: 'Search test course' });
+  vi.stubGlobal('matchMedia', () => ({ matches: false }));
+  vi.stubGlobal('scrollTo', () => undefined);
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const view = render(
+    <QueryClientProvider client={client}>
+      <MemoryRouter initialEntries={['/courses?course=' + course.id]}><App /></MemoryRouter>
+    </QueryClientProvider>,
+  );
+  try {
+    const findStudent = async () => {
+      fireEvent.change(await screen.findByRole('searchbox', { name: 'Find a student' }), {
+        target: { value: fixture.accounts.student.email },
+      });
+      return screen.findByRole('radio', { name: /Test Student/ });
+    };
+    const switchRoster = (title: string) => {
+      const card = screen.getByRole('heading', { name: title }).closest('article');
+      if (!card) throw new Error('Course card not found');
+      fireEvent.click(within(card).getByRole('button', { name: 'Roster' }));
+    };
+
+    fireEvent.click(await findStudent());
+    expect((screen.getByRole('button', { name: 'Enroll student' }) as HTMLButtonElement).disabled).toBe(false);
+
+    switchRoster('Computer Science');
+    expect((screen.getByRole('searchbox', { name: 'Find a student' }) as HTMLInputElement).value).toBe('');
+    expect((screen.getByRole('button', { name: 'Enroll student' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((await findStudent() as HTMLInputElement).disabled).toBe(true);
+
+    switchRoster('Search test course');
+    fireEvent.click(await findStudent());
+    fireEvent.click(screen.getByRole('button', { name: 'Enroll student' }));
+    await screen.findByRole('button', { name: 'Remove' });
+    await waitFor(() => {
+      expect((screen.getByRole('radio', { name: /Test Student/ }) as HTMLInputElement).disabled).toBe(true);
+    });
+    expect((await api.roster(course.id)).map((entry) => entry.student_id)).toEqual([fixture.accounts.student.id]);
+  } finally {
+    view.unmount();
+    client.clear();
+  }
+}, 15000);
