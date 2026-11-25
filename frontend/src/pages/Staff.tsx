@@ -300,8 +300,20 @@ function SessionPanel({
         </div>
         {detail.session.is_active ? (
           <>
-            <h2>Session code</h2>
-            <strong className="big-code">{detail.session.otp_code}</strong>
+            <div className="attendance-summary">
+              <div className="attendance-stat">
+                <h2>Session code</h2>
+                <strong className="big-code">{detail.session.otp_code}</strong>
+              </div>
+              <div
+                className="attendance-stat attendance-present"
+                aria-live="polite"
+                aria-atomic="true"
+              >
+                <h2>Students present</h2>
+                <strong className="big-code">{detail.present.length}</strong>
+              </div>
+            </div>
             <p>Share this code with students to record their attendance.</p>
             <button
               disabled={busy}
