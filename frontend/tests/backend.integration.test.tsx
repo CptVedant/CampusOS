@@ -173,7 +173,6 @@ it('renders the teacher-to-student check-in flow and shows an empty live materia
       <QueryClientProvider client={client}>
         <MemoryRouter
           initialEntries={[path]}
-          future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
         >
           <App />
         </MemoryRouter>
@@ -218,6 +217,31 @@ it('renders the teacher-to-student check-in flow and shows an empty live materia
   await screen.findByRole('heading', { name: 'Session results' });
   closeResults();
 }, 15000);
+
+it('validates the login form and signs in through the real backend', async () => {
+  const { password } = await import(/* @vite-ignore */ fixturePath);
+  vi.stubGlobal('matchMedia', () => ({ matches: false }));
+  vi.stubGlobal('scrollTo', () => undefined);
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const view = render(
+    <QueryClientProvider client={client}>
+      <MemoryRouter><App /></MemoryRouter>
+    </QueryClientProvider>,
+  );
+  try {
+    const submit = await screen.findByRole('button', { name: 'Sign in' });
+    fireEvent.click(submit);
+    await screen.findByText('Enter a valid email address.');
+    await screen.findByText('Enter your password.');
+    fireEvent.change(screen.getByLabelText('Email'), { target: { value: fixture.accounts.teacher.email } });
+    fireEvent.change(screen.getByLabelText('Password'), { target: { value: password } });
+    fireEvent.click(submit);
+    await screen.findByRole('heading', { name: 'Welcome, Test' });
+  } finally {
+    view.unmount();
+    client.clear();
+  }
+});
 
 it('uploads, edits, downloads and deletes live materials with backend role checks', async () => {
   const { password } = await import(/* @vite-ignore */ fixturePath);
