@@ -1,7 +1,6 @@
-# SMS Backend
+# CampusOS backend
 
-Self-hosted Student Management System API: Fastify + SQLite (better-sqlite3), designed for
-low-resource hosting (Termux on Android). **Status: Phase 1 of 8** (foundation + schema).
+Self-hosted Fastify API with SQLite for accounts, courses, enrollments, attendance, course materials, and individual assessment scores. For a seeded local demo, see the [repository quick start](../README.md#quick-start).
 
 ## Architecture
 Routes (endpoints) -> Controllers (HTTP) -> Services (business logic) -> SQLite (parameterized SQL only).
@@ -9,11 +8,11 @@ Config and the DB handle are injected into `buildApp()`, which keeps tests isola
 
     src/config/      env parsing, SQLite pragmas
     src/database/    connection, migration runner, migrations/*.sql, seeds
-    src/modules/     one folder per feature (health now; auth, courses, ... later)
+    src/modules/     feature routes and services
     src/utils/       errors, response envelope, ids, validation patterns
 
 ## Install and run
-    npm install
+    npm ci
     cp .env.example .env        # set JWT_SECRET before running commands below
     npm run db:migrate          # optional: server also migrates on startup
     npm run dev                 # development (auto-restart)
