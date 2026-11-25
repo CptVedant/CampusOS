@@ -106,6 +106,9 @@ Course not found -> 404; exists but not permitted -> 403; malformed id -> 400.
 | GET | /api/courses/:courseId/enrollments | owner teacher, admin | roster: `student_id, full_name, email, enrolled_at` |
 | DELETE | /api/courses/:courseId/enrollments/:studentId | owner teacher, admin | 404 if not enrolled |
 | GET | /api/me/courses | student | the caller's own enrollments (identity from the JWT only) |
+| GET | /api/courses/:courseId/students/search?q= | owner teacher, admin | find students by partial name or email |
+
+Student search trims `q` and requires 3 characters after trimming. The query may be at most 254 characters. It uses literal substring matching with SQLite’s built-in ASCII case folding. The result contains at most 20 students ordered by name and student ID. A successful response is `{ success: true, data: [{ student_id, full_name, email, already_enrolled }] }`, with a boolean enrollment flag for the selected course. An empty result returns `data: []`. Continue to use the enrollment endpoint with the selected UUID.
 
 ## Attendance (Phase 4)
 Staff = teacher (own courses only) or admin (all courses). Students use only the student endpoints.

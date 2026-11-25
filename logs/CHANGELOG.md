@@ -1,5 +1,15 @@
 # CampusOS frontend changelog
 
+## 2026-11-25 — Student search backend, milestone 2
+
+- Added four Fastify and SQLite integration tests covering partial name and email lookup, the roster update after enrollment, per-course enrollment status, role and ownership restrictions, query validation, literal matching, and the 20-result cap. All four passed.
+- Full backend suite on Node 24: 149 passed, 1 skipped, 0 failed. The initial sandbox run lacked a usable temporary directory. The rerun used a dedicated temporary directory for the fixtures.
+
+## 2026-11-25 — Student search backend, milestone 1
+
+- Added the course-scoped student search endpoint and documented the API contract in the backend README. It uses the existing management permissions and reports enrollment status for each result.
+- Module syntax, Git whitespace checks, and an in-memory SQLite service smoke check passed. The HTTP integration suite and roster picker remain follow-ups.
+
 ## 2026-11-24 — Frontend demo
 
 - M0–M2 delivered the React scaffold, typed API and mock adapters, role navigation, login, and light and dark styles. Login tokens use localStorage as agreed. Lite mode is deferred.

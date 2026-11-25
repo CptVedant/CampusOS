@@ -21,3 +21,8 @@ export async function remove(request) {
 export async function myCourses(request) {
   return ok(listEnrolledCourses(request.server.db, request.user.sub));
 }
+
+export async function search(request) {
+  const { db } = request.server;
+  return ok(enrollments.searchStudents(db, request.user, request.params.courseId, request.query.q));
+}
