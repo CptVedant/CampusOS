@@ -1,5 +1,10 @@
 # CampusOS frontend changelog
 
+## 2026-11-25 — Student search frontend, milestone 1
+
+- Added the authenticated course-scoped search client and debounced React Query hook. Searches wait 300 ms after the latest eligible term and are disabled in mock mode. The roster picker remains a follow-up.
+- TypeScript, targeted lint, the Vite build, and all nine frontend unit tests passed. Two new cases cover the request contract, the three-character threshold, debounce, and course-scoped query keys.
+
 ## 2026-11-25 — Student search backend, milestone 2
 
 - Added four Fastify and SQLite integration tests covering partial name and email lookup, the roster update after enrollment, per-course enrollment status, role and ownership restrictions, query validation, literal matching, and the 20-result cap. All four passed.

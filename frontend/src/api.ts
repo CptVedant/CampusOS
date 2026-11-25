@@ -27,6 +27,7 @@ export async function requestResponse(
   path: string,
   method = 'GET',
   body?: object,
+  signal?: AbortSignal,
 ): Promise<Response> {
   const auth = readAuth();
   const headers = new Headers({ Accept: 'application/json' });
@@ -39,9 +40,11 @@ export async function requestResponse(
     response = await fetch('/api' + path, {
       method,
       headers,
+      signal,
       body: multipart ? body : body ? JSON.stringify(body) : undefined,
     });
-  } catch {
+  } catch (error) {
+    if (signal?.aborted) throw error;
     throw new Error(
       'Could not reach the server. Check your connection and try again.',
     );

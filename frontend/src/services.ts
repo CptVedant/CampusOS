@@ -8,6 +8,7 @@ import type {
   Session,
   SessionDetail,
   Student,
+  StudentSearchResult,
 } from './types';
 
 export const useMocks = import.meta.env.VITE_USE_MOCKS === 'true';
@@ -32,6 +33,14 @@ export const api = {
     ),
   deleteCourse: (id: string) => request('/courses/' + id, 'DELETE'),
   roster: (id: string) => request<Student[]>('/courses/' + id + '/enrollments'),
+  async searchStudents(courseId: string, term: string, signal?: AbortSignal) {
+    const query = new URLSearchParams({ q: term.trim() });
+    const path =
+      '/courses/' + encodeURIComponent(courseId) + '/students/search?' + query;
+    return responseData<StudentSearchResult[]>(
+      await requestResponse(path, 'GET', undefined, signal),
+    );
+  },
   enroll: (id: string, student_id: string) =>
     request('/courses/' + id + '/enrollments', 'POST', { student_id }),
   unenroll: (id: string, student: string) =>
