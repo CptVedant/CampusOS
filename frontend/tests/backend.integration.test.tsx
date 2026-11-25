@@ -316,3 +316,95 @@ it('finds a student in the roster, clears selection on course switch, and enroll
     client.clear();
   }
 }, 15000);
+
+it('provisions an empty campus and records a new student check-in through the UI', async () => {
+  const { createBackend, password } = await import(/* @vite-ignore */ fixturePath);
+  await fixture.app.close();
+  const empty = await createBackend({ seed: false });
+  fixture = empty;
+  const admin = 'admin@new-campus.test';
+  const teacher = 'teacher@new-campus.test';
+  const student = 'student@new-campus.test';
+  await empty.bootstrap({ full_name: 'Campus Admin', email: admin, password });
+
+  vi.stubGlobal('matchMedia', () => ({ matches: false }));
+  vi.stubGlobal('scrollTo', () => undefined);
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const view = render(
+    <QueryClientProvider client={client}>
+      <MemoryRouter initialEntries={['/users']}><App /></MemoryRouter>
+    </QueryClientProvider>,
+  );
+  const fill = (label: string, value: string) => {
+    fireEvent.change(screen.getByLabelText(label, { exact: true }), { target: { value } });
+  };
+  const button = (name: string) => screen.getByRole('button', { name });
+  const navigate = (name: string) => fireEvent.click(screen.getByRole('link', { name }));
+  async function signIn(email: string) {
+    const submit = await screen.findByRole('button', { name: 'Sign in' });
+    fill('Email', email);
+    fill('Password', password);
+    fireEvent.click(submit);
+    await screen.findByRole('button', { name: 'Sign out' });
+  }
+
+  try {
+    await signIn(admin);
+    await screen.findByRole('heading', { name: 'Create account' });
+    for (const [role, name, email] of [
+      ['teacher', 'New Teacher', teacher],
+      ['student', 'New Student', student],
+    ]) {
+      fill('Full name', name);
+      fill('Email', email);
+      fill('Role', role);
+      fill('Password', password);
+      fireEvent.click(button('Create account'));
+      await screen.findByText('Account created for ' + email + '.');
+    }
+
+    navigate('Courses');
+    fireEvent.click(await screen.findByRole('button', { name: 'New course' }));
+    await screen.findByRole('option', { name: 'New Teacher (' + teacher + ')' });
+    fill('Course code', 'NEW101');
+    fill('Title', 'New Campus Course');
+    const teacherSelect = screen.getByRole<HTMLSelectElement>('combobox', { name: 'Teacher' });
+    fill('Teacher', teacherSelect.options[1].value);
+    fireEvent.click(button('Save course'));
+    await screen.findByRole('heading', { name: 'New Campus Course' });
+
+    fireEvent.click(button('Sign out'));
+    await signIn(teacher);
+    const search = await screen.findByRole('searchbox', { name: 'Find a student' });
+    fireEvent.change(search, { target: { value: student } });
+    fireEvent.click(await screen.findByRole('radio', { name: /New Student/ }));
+    fireEvent.click(button('Enroll student'));
+    await screen.findByRole('button', { name: 'Remove' });
+
+    navigate('Attendance');
+    const start = await screen.findByRole<HTMLButtonElement>('button', { name: 'Start session' });
+    await waitFor(() => expect(start.disabled).toBe(false));
+    fireEvent.click(start);
+    await screen.findByRole('heading', { name: 'Session code' });
+    const code = screen.getByText(/^\d{6}$/).textContent!;
+
+    fireEvent.click(button('Sign out'));
+    await signIn(student);
+    navigate('Overview');
+    const digits = await screen.findByRole('group', { name: 'Six-digit session code' });
+    fireEvent.paste(within(digits).getByRole('textbox', { name: 'Digit 1' }), {
+      clipboardData: { getData: () => code },
+    });
+    fireEvent.click(button('Submit code'));
+    await screen.findByText('Attendance recorded for NEW101.');
+
+    fireEvent.click(button('Sign out'));
+    await signIn(teacher);
+    navigate('Attendance');
+    await screen.findByRole('heading', { name: 'Present · 1' });
+    expect(screen.getByText('New Student')).toBeTruthy();
+  } finally {
+    view.unmount();
+    client.clear();
+  }
+}, 20000);

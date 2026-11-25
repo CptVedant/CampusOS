@@ -135,3 +135,7 @@ Rules and assumptions (the SRS leaves these open):
 - Percentage = `sessions_attended / total_sessions * 100` (2 decimals). `total_sessions` counts every closed session of the course plus a still-open session only if the student already punched it; 0 sessions gives 0%. Enrollment date is not considered.
 - Manual override = staff add or delete an attendance record (the schema has no status column). Manual records use a synthetic fingerprint `manual:<uuid>` and are flagged `manual: true` in session detail. There is no audit trail of who made the change or why.
 - There is no rate limiting: a 6-digit OTP can be guessed by an enrolled student during an open session.
+
+## Create the first admin
+
+Configure the backend .env, then run **npm run db:seed** from backend in an interactive terminal. Enter the admin name, email, and password when prompted. The command applies pending migrations and creates the first administrator. Sign in with those credentials on the regular sign-in page.

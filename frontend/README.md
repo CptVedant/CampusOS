@@ -34,13 +34,22 @@ All four disposable accounts use `CampusOS-Local-Test-Only`.
 2. Open the site in a second browser profile or private window for the student. Enter the teacher’s code on **Overview**.
 3. Show the student’s attendance percentage and history, then return to the teacher’s live roster. End the session.
 4. Open **Materials** as a teacher or admin to upload, edit, or delete documents. Students can list and download documents from courses they are enrolled in.
-5. Open **Marks** or the admin **Users** tab to view labeled samples. These screens depend on backend features that are not yet available.
+5. Open **Marks** to view sample data. In the admin workspace, **Users** lists real accounts and can create teachers and students.
 
 Separate browser profiles keep sign-ins independent. If demonstrating both student accounts, give them separate profiles because the API allows one check-in per browser fingerprint per session.
 
 Live enrollment accepts the student UUID through the existing enrollments endpoint. Name and email search requires the Phase 6 student-search endpoint on the deployed backend. Bearer tokens are kept in tab-scoped session storage and cleared on sign-out or expiration. Serve the frontend and same-origin API over HTTPS in production.
 
 To use another backend, set `API_PROXY_TARGET` in `frontend/.env.local` and restart Vite. Production builds use same-origin `/api` URLs.
+
+## Use persistent accounts
+
+Configure the backend environment as described in the [backend setup](../backend/README.md#create-the-first-admin). In the backend directory, run `npm run db:seed` once and then `npm run dev`. Start the frontend in live mode with `VITE_USE_MOCKS=false`.
+
+1. Sign in as the admin and create a teacher and a student in **Users**.
+2. In **Courses**, create a course and select the teacher by name.
+3. Sign in as the teacher, find and enroll the student in the course roster, then start an attendance session.
+4. Sign in as the student in a separate browser profile and submit the session code. Return to the teacher workspace to see the attendance record.
 
 ## Frontend-only demo
 

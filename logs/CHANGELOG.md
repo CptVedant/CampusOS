@@ -37,3 +37,18 @@
 - The real-API build starts with approximately 68 kB of gzip-compressed JavaScript. Loading the signed-out screen and its shared chunks brings the total to approximately 93 kB. Main CSS is approximately 4 kB gzip.
 - Manual demo check passed: signed in as the disposable Test Teacher and opened Live Attendance with CS101 and the Start session control available. Stopped the frontend and test API afterward.
 - Review status: awaiting project-owner feedback. Record each requested revision in this changelog with the date, affected files, checks run, and any unresolved items.
+
+## Admin provisioning — milestone 1
+
+- Implemented interactive first-admin creation with hidden password entry, bcrypt hashing, and a transaction that prevents a second bootstrap.
+- Verified input validation, concurrent bootstrap attempts, and authentication with the new credentials on Node.js 24.
+
+## Admin provisioning — milestone 2
+
+- Connected the Users screen to admin-only account listing and teacher/student creation. Course assignment now selects a teacher by name and email.
+- Verified frontend types and API enforcement for unauthenticated and non-admin requests, restricted roles, case-insensitive duplicate emails, and public-only user responses.
+
+## Admin provisioning — milestone 3
+
+- Verified the workflow in the React UI against an empty SQLite database: bootstrap and sign in as admin, create both accounts, assign the teacher, enroll the student, record a check-in, and view the updated teacher roster.
+- Node.js 24 verification: 151 backend tests passed (1 POSIX-only test skipped on Windows), 15 frontend tests passed, and the production build succeeded.

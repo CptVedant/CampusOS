@@ -28,6 +28,7 @@ const Student = lazy(() => import('./pages/Student'));
 const Staff = lazy(() => import('./pages/Staff'));
 const Demo = lazy(() => import('./pages/Demo'));
 const Materials = lazy(() => import('./pages/Materials'));
+const UserManagement = lazy(() => import('./pages/Users'));
 
 const nav = {
   home: ['/', 'Overview', House],
@@ -191,10 +192,12 @@ export default function App() {
             <Route
               path="/users"
               element={
-                user.role === 'admin' ? (
+                user.role !== 'admin' ? (
+                  deny
+                ) : useMocks ? (
                   <Demo type="users" role={user.role} />
                 ) : (
-                  deny
+                  <UserManagement />
                 )
               }
             />
